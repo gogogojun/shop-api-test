@@ -1,0 +1,24 @@
+version: 0.2
+
+env:
+  variables:
+    BUILD_DIR: build/libs
+    ARTIFACT_ZIP: artifact.zip
+
+phases:
+  install:
+    commands:
+      - echo "Install JDK 17"
+      - echo "Using CodeBuild's standard image JDK 17"
+  pre_build:
+    commands:
+      - chmod +x ./gradlew
+  build:
+    commands:
+      - ./gradlew clean build -x test
+      - test -d ${BUILD_DIR} || (echo "Build dir not found"; exit 1)
+      - zip -r ${ARTIFACT_ZIP} appspec.yml scripts deploy ${BUILD_DIR}/*.jar
+artifacts:
+  files:
+    - artifact.zip
+  name: artifact-$(date +%Y%m%d%H%M%S)

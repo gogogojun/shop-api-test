@@ -1,0 +1,15 @@
+[Unit]
+Description=MyApp API Server
+After=network.target
+
+[Service]
+User=ec2-user
+EnvironmentFile=/etc/myapp.env
+WorkingDirectory=/opt/myapp
+ExecStart=/usr/bin/java -jar /opt/myapp/app.jar
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
