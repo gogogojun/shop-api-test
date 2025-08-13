@@ -18,6 +18,8 @@ ExecStart=/usr/bin/java \
 Restart=always
 RestartSec=5
 SuccessExitStatus=143
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
