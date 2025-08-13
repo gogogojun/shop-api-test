@@ -1,24 +1,33 @@
 version: 0.2
 
-env:
-  variables:
-    BUILD_DIR: build/libs
-
 phases:
-  install:
-    commands:
-      - echo "Using CodeBuild image with JDK 17"
   pre_build:
     commands:
       - chmod +x ./gradlew
   build:
     commands:
       - ./gradlew clean build -x test
-      - test -d ${BUILD_DIR} || (echo "Build dir not found"; exit 1)
+      - test -d build/libs || (echo "[ERR] build/libs not found"; exit 1)
+
+      # 배포 묶음 만들기
+      - rm -rf bundle && mkdir -p bundle/scripts bundle/deploy
+      # 생성된 첫 번째 JAR을 app.jar로 고정
+      - JAR_PATH=$(ls -1 build/libs/*.jar | head -n 1) || true
+      - '[ -n "$JAR_PATH" ] || (echo "[ERR] no jar produced"; exit 1)'
+      - cp "$JAR_PATH" bundle/app.jar
+
+      - cp -r scripts/* bundle/scripts/ || true
+      - cp deploy/myapp.service bundle/deploy/
+      - cp appspec.yml bundle/
+
+      # 검증 로그
+      - echo "== bundle =="
+      - find bundle -maxdepth 2 -type f -print
 
 artifacts:
   files:
-    - appspec.yml
-    - scripts/**/*
-    - deploy/**/*
-    - ${BUILD_DIR}/*.jar
+    - 'appspec.yml'
+    - 'app.jar'
+    - 'deploy/**'
+    - 'scripts/**'
+  base-directory: bundle

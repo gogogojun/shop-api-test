@@ -1,13 +1,11 @@
 version: 0.0
-os: linux
 files:
-  - source: build/libs/app.jar
+  - source: app.jar
     destination: /opt/myapp
-permissions:
-  - object: /opt/myapp
-    owner: ec2-user
-    group: ec2-user
-    mode: 755
+  - source: deploy/myapp.service
+    destination: /opt/myapp/deploy
+  - source: scripts/**/*
+    destination: /opt/myapp/scripts
 hooks:
   BeforeInstall:
     - location: scripts/before_install.sh
@@ -19,7 +17,7 @@ hooks:
       runas: root
   ApplicationStart:
     - location: scripts/start.sh
-      timeout: 300
+      timeout: 600
       runas: root
   ApplicationStop:
     - location: scripts/stop.sh
