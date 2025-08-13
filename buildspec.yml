@@ -16,7 +16,8 @@ phases:
       - '[ -n "$JAR_PATH" ] || (echo "[ERR] no jar produced"; exit 1)'
       - cp "$JAR_PATH" bundle/app.jar
 
-      - cp -r scripts/* bundle/scripts/ || true
+
+      - cp -a scripts/. bundle/scripts/
       - cp deploy/myapp.service bundle/deploy/
       - cp appspec.yml bundle/
 
