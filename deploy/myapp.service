@@ -6,13 +6,30 @@ After=network.target
 User=ec2-user
 EnvironmentFile=/etc/myapp.env
 WorkingDirectory=/opt/myapp
-ExecStart=/usr/bin/java
-    -Dserver.port=%E{SERVER_PORT}
-    -Dspring.profiles.active=%E{SPRING_PROFILES_ACTIVE}
-    -Dspring.datasource.url=%E{SPRING_DATASOURCE_URL}
-    -Dspring.datasource.username=%E{SPRING_DATASOURCE_USERNAME}
-    -Dspring.datasource.password=%E{SPRING_DATASOURCE_PASSWORD}
-    -jar /opt/myapp/app.jar
+[Unit]
+Description=MyApp API Server
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+EnvironmentFile=/etc/myapp.env
+WorkingDirectory=/opt/myapp
+
+ExecStart=/usr/bin/java \
+  -Dserver.port=%E{SERVER_PORT} \
+  -Dspring.profiles.active=%E{SPRING_PROFILES_ACTIVE} \
+  -Dspring.datasource.url=%E{SPRING_DATASOURCE_URL} \
+  -Dspring.datasource.username=%E{SPRING_DATASOURCE_USERNAME} \
+  -Dspring.datasource.password=%E{SPRING_DATASOURCE_PASSWORD} \
+  -jar /opt/myapp/app.jar
+
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
 Restart=always
 RestartSec=5
 SuccessExitStatus=143
