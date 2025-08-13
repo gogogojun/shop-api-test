@@ -3,27 +3,41 @@ set -euo pipefail
 
 SERVICE="myapp.service"
 PORT="${SERVER_PORT:-8080}"
-HC_PATH="${HC_PATH:-/}"          # 필요시 /swagger-ui/index.html 나 /actuator/health/readiness 로 바꿔도 됨
-MAX_RETRY="${MAX_RETRY:-60}"     # 60회
-SLEEP_SEC="${SLEEP_SEC:-5}"      # 5초 간격
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:${PORT}/actuator/health}"
+STRICT_HEALTH="${STRICT_HEALTH:-true}"   # true면 실패 시 exit 1, false면 경고만
 
 echo "[START] restarting ${SERVICE}"
-systemctl daemon-reload || true
+systemctl daemon-reload
 systemctl enable "${SERVICE}" || true
 systemctl restart "${SERVICE}"
 
-echo "[HC] waiting for http://127.0.0.1:${PORT}${HC_PATH}"
-for i in $(seq 1 "${MAX_RETRY}"); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${PORT}${HC_PATH}" || true)
-  if [ -n "$code" ] && [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then
-    echo "[HC] OK (${code}) at try ${i}/${MAX_RETRY}"
-    exit 0
+# 1) 포트 리슨 대기 (최대 20초)
+for i in $(seq 1 20); do
+  if ss -ltn | awk '{print $4}' | grep -q ":${PORT}$"; then
+    echo "[PORT] ${PORT} is listening"
+    break
   fi
-  echo "[HC] not ready yet (${code:-000}) ... ${i}/${MAX_RETRY}"
-  sleep "${SLEEP_SEC}"
+  echo "[PORT] waiting... ${i}/20"
+  sleep 1
 done
 
-echo "[ERR] Health check failed. Dumping logs..."
-systemctl status "${SERVICE}" -l || true
-journalctl -u "${SERVICE}" -n 300 --no-pager || true
-exit 1
+if ! ss -ltn | awk '{print $4}' | grep -q ":${PORT}$"; then
+  echo "[PORT] still not listening after 20s"
+  journalctl -u "${SERVICE}" -n 120 --no-pager || true
+  [[ "${STRICT_HEALTH}" == "true" ]] && exit 1 || echo "[WARN] continuing despite port not open"
+fi
+
+# 2) 헬스체크 (최대 20회, 1s 간격 = 20초)
+echo "[HC] checking ${HEALTH_URL}"
+for i in $(seq 1 20); do
+  if curl -fsS "${HEALTH_URL}" >/dev/null 2>&1; then
+    echo "[HC] OK"
+    exit 0
+  fi
+  echo "[HC] not ready (${i}/20)"
+  sleep 1
+done
+
+echo "[HC] FAILED after 20s"
+journalctl -u "${SERVICE}" -n 120 --no-pager || true
+[[ "${STRICT_HEALTH}" == "true" ]] && exit 1 || exit 0
