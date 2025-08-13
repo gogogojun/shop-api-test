@@ -12,24 +12,29 @@ phases:
       - ./gradlew clean build -x test
       - echo "==== built jars ===="
       - ls -al build/libs || true
-      # jar 선택 로직: 부트용 JAR 우선, 없으면 최신 JAR 1개 선택
+      # 실행용 JAR 1개만 선택 (plain 제외, 최신 우선)
       - |
         set -euo pipefail
-        mkdir -p bundle/scripts bundle/deploy
-        # 후보 목록 만들기 (부트용 jar 우선순위)
         mapfile -t JARS < <(ls -1t build/libs/*SNAPSHOT.jar build/libs/*.jar 2>/dev/null | grep -v '\-plain\.jar' || true)
         if ((${#JARS[@]} == 0)); then
           echo "ERROR: No jar found in build/libs"; exit 1
         fi
         SELECTED="${JARS[0]}"
         echo "Selected JAR: $SELECTED"
-        cp "$SELECTED" bundle/app.jar
-      # 나머지 배포 리소스 복사
-      - cp -r appspec.yml bundle/
-      - cp -r scripts/* bundle/scripts/ || true
-      - cp -r deploy/*  bundle/deploy/  || true
+        cp "$SELECTED" app.jar
+      # 배포에 필요한 파일을 루트에 둔다 (중요!)
+      - test -f appspec.yml || { echo "ERROR: appspec.yml not found at repo root"; exit 1; }
+      - mkdir -p scripts deploy
+      - ls -al scripts || true
+      - ls -al deploy  || true
+      - echo "==== artifact preview (root) ===="
+      - find . -maxdepth 1 -type f -printf "%p\n" | sort
 
 artifacts:
   files:
-    - bundle/**
+    - appspec.yml
+    - app.jar
+    - scripts/**/*
+    - deploy/**/*
   name: artifact-$(date +%Y%m%d%H%M%S)
+
