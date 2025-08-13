@@ -5,7 +5,7 @@ set -e
 cat >/etc/myapp.env <<'EOF'
 SPRING_PROFILES_ACTIVE=prod
 SERVER_PORT=8080
-SPRING_DATASOURCE_URL=jdbc:mysql://shop-db.c74828wmikhx.ap-northeast-2.rds.amazonaws.com:3306/app?useSSL=false&characterEncoding=UTF-8
+SPRING_DATASOURCE_URL=jdbc:mysql://shop-db.c74828wmikhx.ap-northeast-2.rds.amazonaws.com:3306/shop?useSSL=false&characterEncoding=UTF-8
 SPRING_DATASOURCE_USERNAME=admin
 SPRING_DATASOURCE_PASSWORD=PgEhzLRi4Pf0cVFG5BhX
 EOF
