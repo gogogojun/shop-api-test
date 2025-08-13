@@ -2,29 +2,34 @@ version: 0.2
 
 phases:
   install:
-    commands:
-      - echo "Using JDK 17 in CodeBuild image"
+    runtime-versions:
+      java: corretto17
   pre_build:
     commands:
       - chmod +x ./gradlew
   build:
     commands:
       - ./gradlew clean build -x test
-      - test -d build/libs || (echo "Build dir not found"; exit 1)
-      - rm -rf bundle && mkdir -p bundle/deploy bundle/scripts
-      - cp build/libs/*.jar bundle/app.jar
-      - cp appspec.yml bundle/appspec.yml
-      - cp -r scripts/* bundle/scripts/
-      - cp deploy/myapp.service bundle/deploy/myapp.service
+      - echo "==== built jars ===="
+      - ls -al build/libs || true
+      # jar 선택 로직: 부트용 JAR 우선, 없으면 최신 JAR 1개 선택
+      - |
+        set -euo pipefail
+        mkdir -p bundle/scripts bundle/deploy
+        # 후보 목록 만들기 (부트용 jar 우선순위)
+        mapfile -t JARS < <(ls -1t build/libs/*SNAPSHOT.jar build/libs/*.jar 2>/dev/null | grep -v '\-plain\.jar' || true)
+        if ((${#JARS[@]} == 0)); then
+          echo "ERROR: No jar found in build/libs"; exit 1
+        fi
+        SELECTED="${JARS[0]}"
+        echo "Selected JAR: $SELECTED"
+        cp "$SELECTED" bundle/app.jar
+      # 나머지 배포 리소스 복사
+      - cp -r appspec.yml bundle/
+      - cp -r scripts/* bundle/scripts/ || true
+      - cp -r deploy/*  bundle/deploy/  || true
+
 artifacts:
   files:
-    - app.zip
-  base-directory: bundle
+    - bundle/**
   name: artifact-$(date +%Y%m%d%H%M%S)
-  discard-paths: no
-  secondary-artifacts:
-    appbundle:
-      files:
-        - '**/*'
-      base-directory: bundle
-      name: appbundle-$(date +%Y%m%d%H%M%S)
