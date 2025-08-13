@@ -28,4 +28,3 @@ artifacts:
     - "app.jar"
     - "scripts/**/*"
     - "deploy/**/*"
-  discard-paths: yes

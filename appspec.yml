@@ -3,8 +3,10 @@ os: linux
 files:
   - source: app.jar
     destination: /opt/myapp
+    overwrite: true
   - source: deploy/myapp.service
     destination: /opt/myapp/deploy
+    overwrite: true
   - source: scripts/
     destination: /opt/myapp/scripts
 hooks:
