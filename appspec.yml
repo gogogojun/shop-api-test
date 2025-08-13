@@ -1,25 +1,18 @@
-version: 0.0
-files:
-  - source: app.jar
-    destination: /opt/myapp
-  - source: deploy/myapp.service
-    destination: /opt/myapp/deploy
-  - source: scripts
-    destination: /opt/myapp/scripts
 hooks:
   BeforeInstall:
     - location: scripts/before_install.sh
-      timeout: 300
       runas: root
+      timeout: 300
   AfterInstall:
     - location: scripts/after_install.sh
-      timeout: 300
       runas: root
+      timeout: 300
   ApplicationStart:
     - location: scripts/start.sh
-      timeout: 600
       runas: root
+      timeout: 900     # ← 넉넉히 (15분)
   ApplicationStop:
     - location: scripts/stop.sh
-      timeout: 300
       runas: root
+      timeout: 300
+
