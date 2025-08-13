@@ -4,27 +4,28 @@ phases:
   install:
     runtime-versions:
       java: corretto17
+
   pre_build:
     commands:
-      - echo "Pre-build start"
-      - chmod +x ./gradlew
-      - if [ -d scripts ]; then chmod +x scripts/*.sh || true; fi
+      - "echo Pre-build start"
+      - "chmod +x ./gradlew"
+      - "[ -d scripts ] && chmod +x scripts/*.sh || true"
+
   build:
     commands:
-      - ./gradlew clean build -x test
-      - echo "Built files:" && ls -al build/libs
-      - JAR=$(ls -t build/libs/*.jar | head -n1)
-      - echo "Using JAR: $JAR"
-      - cp "$JAR" app.jar
-      - test -f app.jar || (echo "ERROR: app.jar missing"; exit 1)
+      - "./gradlew clean build -x test"
+      - "echo 'Built files:' && ls -al build/libs || true"
+      - "JAR=$(ls -t build/libs/*.jar | head -n1); echo Using JAR: $JAR; cp \"$JAR\" app.jar"
+      - "test -f app.jar || (echo 'ERROR: app.jar missing'; exit 1)"
+
   post_build:
     commands:
-      - echo "Post-build done"
+      - "echo Post-build done"
 
 artifacts:
   files:
-    - appspec.yml
-    - app.jar
-    - scripts/**/*
-    - deploy/**/*
+    - "appspec.yml"
+    - "app.jar"
+    - "scripts/**/*"
+    - "deploy/**/*"
   discard-paths: yes
