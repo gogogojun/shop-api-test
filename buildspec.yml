@@ -1,34 +1,30 @@
 version: 0.2
 
 phases:
+  install:
+    commands:
+      - echo "Using JDK 17 in CodeBuild image"
   pre_build:
     commands:
       - chmod +x ./gradlew
   build:
     commands:
       - ./gradlew clean build -x test
-      - test -d build/libs || (echo "[ERR] build/libs not found"; exit 1)
-
-      # 배포 묶음 만들기
-      - rm -rf bundle && mkdir -p bundle/scripts bundle/deploy
-      # 생성된 첫 번째 JAR을 app.jar로 고정
-      - JAR_PATH=$(ls -1 build/libs/*.jar | head -n 1) || true
-      - '[ -n "$JAR_PATH" ] || (echo "[ERR] no jar produced"; exit 1)'
-      - cp "$JAR_PATH" bundle/app.jar
-
-
-      - cp -a scripts/. bundle/scripts/
-      - cp deploy/myapp.service bundle/deploy/
-      - cp appspec.yml bundle/
-
-      # 검증 로그
-      - echo "== bundle =="
-      - find bundle -maxdepth 2 -type f -print
-
+      - test -d build/libs || (echo "Build dir not found"; exit 1)
+      - rm -rf bundle && mkdir -p bundle/deploy bundle/scripts
+      - cp build/libs/*.jar bundle/app.jar
+      - cp appspec.yml bundle/appspec.yml
+      - cp -r scripts/* bundle/scripts/
+      - cp deploy/myapp.service bundle/deploy/myapp.service
 artifacts:
   files:
-    - 'appspec.yml'
-    - 'app.jar'
-    - 'deploy/**'
-    - 'scripts/**'
+    - app.zip
   base-directory: bundle
+  name: artifact-$(date +%Y%m%d%H%M%S)
+  discard-paths: no
+  secondary-artifacts:
+    appbundle:
+      files:
+        - '**/*'
+      base-directory: bundle
+      name: appbundle-$(date +%Y%m%d%H%M%S)

@@ -1,10 +1,11 @@
 version: 0.0
+os: linux
 files:
   - source: app.jar
     destination: /opt/myapp
   - source: deploy/myapp.service
     destination: /opt/myapp/deploy
-  - source: scripts
+  - source: scripts/
     destination: /opt/myapp/scripts
 hooks:
   BeforeInstall:
@@ -17,9 +18,10 @@ hooks:
       runas: root
   ApplicationStart:
     - location: scripts/start.sh
+      timeout: 900
+      runas: root
+  ValidateService:
+    - location: scripts/validate.sh
       timeout: 300
       runas: root
-  ApplicationStop:
-    - location: scripts/stop.sh
-      timeout: 300
-      runas: root
+
