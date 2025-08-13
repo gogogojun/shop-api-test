@@ -2,29 +2,25 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      java: corretto17
-
-  pre_build:
     commands:
-      - "echo Pre-build start"
-      - "chmod +x ./gradlew"
-      - "[ -d scripts ] && chmod +x scripts/*.sh || true"
-
+      - echo "[INSTALL] Java/Gradle ready"
   build:
     commands:
-      - "./gradlew clean build -x test"
-      - "echo 'Built files:' && ls -al build/libs || true"
-      - "JAR=$(ls -t build/libs/*.jar | head -n1); echo Using JAR: $JAR; cp \"$JAR\" app.jar"
-      - "test -f app.jar || (echo 'ERROR: app.jar missing'; exit 1)"
-
-  post_build:
-    commands:
-      - "echo Post-build done"
+      - echo "[BUILD] Gradle build"
+      - ./gradlew clean build -x test
+      - echo "[PACKAGE] Collect artifacts"
+      - rm -rf dist && mkdir -p dist/scripts dist/deploy
+      # 빌드된 JAR을 단일 파일명 app.jar로 통일
+      - cp build/libs/*.jar dist/app.jar
+      # 배포 스크립트/유닛 파일/appspec 포함
+      - cp -r scripts/* dist/scripts/ || true
+      - cp deploy/myapp.service dist/deploy/
+      - cp appspec.yml dist/
 
 artifacts:
+  base-directory: dist
   files:
-    - "appspec.yml"
-    - "app.jar"
-    - "scripts/**/*"
-    - "deploy/**/*"
+    - app.jar
+    - appspec.yml
+    - scripts/**/*
+    - deploy/**/*
