@@ -12,7 +12,7 @@ phases:
       - echo "[PRE_BUILD] Make executables"
       - chmod +x gradlew || true
       - find scripts -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
-
+      - chmod +x scripts/*.sh || true
   build:
     commands:
       - echo "[BUILD] Gradle build"
