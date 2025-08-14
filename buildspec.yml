@@ -29,4 +29,4 @@ artifacts:
     - appspec.yml
     - app.jar
     - scripts/**/*
-  discard-paths: yes
+
