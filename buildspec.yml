@@ -1,15 +1,35 @@
 version: 0.2
+
 phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - echo "[INSTALL] Java runtime set to Corretto 17"
+
+  pre_build:
+    commands:
+      - echo "[PRE_BUILD] Make scripts executable"
+      - chmod +x gradlew || true
+      - chmod +x scripts/*.sh 2>/dev/null || true
+
   build:
     commands:
+      - echo "[BUILD] Gradle build"
       - ./gradlew clean build -x test
-      - rm -rf dist && mkdir -p dist/scripts
-      - cp build/libs/*.jar dist/app.jar
-      - cp -r scripts/* dist/scripts/ || true
-      - cp appspec.yml dist/
+      - echo "[BUILD] Locate jar"
+      - JAR=$(ls -1 build/libs/*.jar | head -n1)
+      - test -f "$JAR" || { echo "Jar not found under build/libs"; exit 1; }
+      - cp "$JAR" app.jar
+      - ls -al app.jar
+
+  post_build:
+    commands:
+      - echo "[POST_BUILD] Build done: $(ls -1 app.jar)"
+
 artifacts:
-  base-directory: dist
   files:
-    - app.jar
     - appspec.yml
+    - app.jar
     - scripts/**/*
+  discard-paths: yes
