@@ -1,0 +1,15 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - ./gradlew clean build -x test
+      - rm -rf dist && mkdir -p dist/scripts
+      - cp build/libs/*.jar dist/app.jar
+      - cp -r scripts/* dist/scripts/ || true
+      - cp appspec.yml dist/
+artifacts:
+  base-directory: dist
+  files:
+    - app.jar
+    - appspec.yml
+    - scripts/**/*
