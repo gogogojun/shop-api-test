@@ -9,23 +9,22 @@ phases:
 
   pre_build:
     commands:
-      - echo "[PRE_BUILD] Make scripts executable"
+      - echo "[PRE_BUILD] Make executables"
       - chmod +x gradlew || true
-      - chmod +x scripts/*.sh 2>/dev/null || true
+      - find scripts -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
 
   build:
     commands:
       - echo "[BUILD] Gradle build"
       - ./gradlew clean build -x test
       - echo "[BUILD] Locate jar"
-      - JAR=$(ls -1 build/libs/*.jar | head -n1)
-      - test -f "$JAR" || { echo "Jar not found under build/libs"; exit 1; }
+      - JAR=$(ls -1 build/libs/*.jar | head -n1); echo "JAR=$JAR"; test -f "$JAR"
       - cp "$JAR" app.jar
       - ls -al app.jar
 
   post_build:
     commands:
-      - echo "[POST_BUILD] Build done: $(ls -1 app.jar)"
+      - echo "[POST_BUILD] Done"
 
 artifacts:
   files:
